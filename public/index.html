@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RextroDeobf</title>
+<meta name="theme-color" content="#000000">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg bg-home"></div>
+<div class="bg bg-work"></div>
+<div class="bg-shade"></div>
+
+<main id="app" class="state-idle">
+
+  <!-- Karşılama / Bırakma alanı -->
+  <section id="hero">
+    <h1>Rextro<span>Deobf</span></h1>
+    <p class="sub">JAR dosyanı sürükle. Otomatik decompile + deobf edip kaynak kodu burada göstereyim.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-file" role="tab">Dosya</button>
+      <button class="tab" id="tab-text" role="tab">Metin</button>
+    </div>
+
+    <div id="textpane" hidden>
+      <textarea id="textin" spellcheck="false" placeholder="Obfuscate edilmiş Java kodunu buraya yapıştır…"></textarea>
+      <div class="textbar">
+        <span id="texthint">Ctrl+Enter ile de çalıştırabilirsin</span>
+        <button id="btn-text" class="btn primary">Deobf et</button>
+      </div>
+    </div>
+
+    <label id="drop" for="file" tabindex="0">
+      <div class="drop-icon">
+        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      </div>
+      <strong>.jar dosyasını buraya bırak</strong>
+      <span id="drop-sub">veya tıklayıp seç &middot; .jar .class .war .zip &middot; ProGuard mapping.txt de bırakabilirsin &middot; en fazla 200 MB</span>
+      <input id="file" type="file" accept=".jar,.class,.war,.zip,.txt" multiple hidden>
+    </label>
+
+    <div id="progress" hidden>
+      <div class="bar"><i id="barfill"></i></div>
+      <p id="progtext">Yükleniyor…</p>
+    </div>
+    <p id="error" role="alert" hidden></p>
+
+    <p class="hint"><kbd>Ctrl</kbd>+<kbd>K</kbd> komut paleti &nbsp;·&nbsp; <kbd>?</kbd> kısayollar</p>
+  </section>
+
+  <!-- Sonuç ekranı -->
+  <section id="workspace" hidden>
+    <header class="topbar">
+      <div class="brand">Rextro<span>Deobf</span></div>
+      <div class="meta" id="meta"></div>
+      <div class="actions">
+        <button id="btn-palette" class="btn" title="Komut paleti (Ctrl+K)">⌘K</button>
+        <button id="btn-search" class="btn" title="Tüm kaynaklarda ara (Ctrl+Shift+F)">Ara</button>
+        <button id="btn-overview" class="btn" title="Boyut / temizlik istatistikleri">Özet</button>
+        <button id="btn-report" class="btn" hidden>Rapor</button>
+        <button id="btn-zip" class="btn" title="Klasör yapısıyla .zip">ZIP</button>
+        <button id="btn-all" class="btn">Hepsini indir</button>
+        <button id="btn-new" class="btn primary">Yeni dosya</button>
+      </div>
+    </header>
+
+    <div id="livebar" hidden>
+      <div class="bar indeterminate"><i></i></div>
+      <div class="liverow">
+        <span id="livephase">Hazırlanıyor…</span>
+        <span class="spacer"></span>
+        <span id="livecount">0 dosya</span>
+        <span id="livetime">0 sn</span>
+      </div>
+      <div id="livelog"></div>
+    </div>
+
+    <div class="panes">
+      <aside class="side">
+        <input id="filter" type="search" placeholder="Sınıf ara…  ( / )" autocomplete="off">
+        <div id="tree" role="tree"></div>
+        <div id="searchpane" hidden>
+          <input id="q" type="search" placeholder="Koddan ara… (Enter)" autocomplete="off">
+          <div class="qopts">
+            <label><input type="checkbox" id="q-re"> regex</label>
+            <label><input type="checkbox" id="q-cs"> büyük/küçük</label>
+            <span id="q-info"></span>
+          </div>
+          <div id="qres"></div>
+        </div>
+      </aside>
+
+      <section class="viewer">
+        <div id="filetabs" hidden></div>
+        <div class="viewbar">
+          <span id="curfile">Bir sınıf seç</span>
+          <span class="spacer"></span>
+          <button id="btn-fminus" class="btn small ico" title="Yazıyı küçült">A−</button>
+          <button id="btn-fplus" class="btn small ico" title="Yazıyı büyüt">A+</button>
+          <button id="btn-wrap" class="btn small" title="Satırları kaydır">Kaydır</button>
+          <button id="btn-split" class="btn small" title="Ham ve temiz hali yan yana göster">Yan yana</button>
+          <button id="btn-raw" class="btn small" title="CFR'nin ham çıktısı ile deobf edilmiş hali arasında geçiş">Temiz</button>
+          <button id="btn-copy" class="btn small" disabled>Kopyala</button>
+          <button id="btn-dl" class="btn small" disabled>İndir</button>
+        </div>
+        <div class="code" id="code">
+          <div class="empty">Soldaki listeden bir .java dosyası seç.</div>
+        </div>
+        <div class="statusbar" id="statusbar" hidden>
+          <span id="st-lines"></span><span id="st-chars"></span><span id="st-sel"></span>
+          <span class="spacer"></span><span id="st-mode"></span>
+        </div>
+      </section>
+    </div>
+  </section>
+
+</main>
+
+<div id="modal" hidden><div class="card"><button id="modal-x" class="btn small">Kapat</button><div id="modal-body"></div></div></div>
+
+<!-- Komut paleti -->
+<div id="palette" hidden>
+  <div class="pcard">
+    <input id="pin" type="text" placeholder="Sınıf ara veya komut yaz…" autocomplete="off" spellcheck="false">
+    <div id="plist" role="listbox"></div>
+    <div class="pfoot"><span><kbd>↑</kbd><kbd>↓</kbd> gez</span><span><kbd>Enter</kbd> aç</span><span><kbd>Esc</kbd> kapat</span></div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<!-- Tüm pencereye sürüklerken görünen kaplama -->
+<div id="overlay" hidden><div>Bırak, gerisini ben hallederim</div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
